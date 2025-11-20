@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Future Dream Demo — Spring 게시판</title>
+  <style>
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,'Noto Sans KR',sans-serif;line-height:1.6;color:#333;background:#f6f8fb;padding:40px}
+    .wrap{max-width:900px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;box-shadow:0 6px 24px rgba(26,43,71,.08)}
+    h1{margin:0 0 8px;font-size:28px;color:#102a43}
+    p.lead{margin:0 0 16px;color:#334e68}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+    a.btn{display:inline-block;padding:10px 14px;border-radius:8px;text-decoration:none;color:#fff;background:#4169e1}
+    pre{background:#f3f6fb;padding:12px;border-radius:8px;overflow:auto}
+    ul{margin:8px 0 0 18px}
+    footer{margin-top:20px;color:#829ab1;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Future Dream Demo</h1>
+    <p class="lead">Spring Boot 기반 학습용 게시판 예제 프로젝트입니다. 이 저장소는 로컬에서 실행하거나 GitHub Pages로 간단한 프로젝트 소개 페이지를 제공할 수 있습니다.</p>
+
+    <div class="grid">
+      <div>
+        <h3>로컬에서 실행 (개발)</h3>
+        <p>프로젝트가 demo 폴더에 있습니다. 빌드 및 실행 방법:</p>
+        <pre>cd demo
+mvn -DskipTests package
+/usr/lib/jvm/java-17-openjdk-amd64/bin/java -jar target/demo-0.0.1-SNAPSHOT.jar</pre>
+        <p>브라우저에서 <code>http://localhost:8080</code>로 접속하세요.</p>
+      </div>
+
+      <div>
+        <h3>GitHub Pages 배포(간단)</h3>
+        <p>이 파일을 루트에 두면 GitHub Pages에서 정적 소개 페이지로 사용 가능합니다.</p>
+        <ul>
+          <li>프로젝트 페이지: `gh-pages` 브랜치로 푸시하거나</li>
+          <li>또는 `Settings → Pages`에서 `main` 브랜치의 루트(root)로 설정</li>
+        </ul>
+        <p>간단한 명령 (gh-pages 브랜치 생성 예):</p>
+        <pre>git checkout -b gh-pages
+git add index.html
+git commit -m "Add GitHub Pages index"
+git push -u origin gh-pages</pre>
+      </div>
+    </div>
+
+    <h3 style="margin-top:20px">프로젝트 링크</h3>
+    <p>코드 위치: <code>/demo</code> 폴더 — 주요 파일:</p>
+    <ul>
+      <li>`src/main/java/com/example/demo` — Spring 애플리케이션 소스</li>
+      <li>`src/main/resources/templates` — Thymeleaf 템플릿</li>
+      <li>`pom.xml` — Maven 설정</li>
+    </ul>
+
+    <p style="margin-top:14px">빠른 액션:</p>
+    <a class="btn" href="https://github.com/gguatit/Future_Dream_Demo" target="_blank" rel="noopener">GitHub 저장소 보기</a>
+    <a class="btn" href="/demo" style="background:#22c55e;margin-left:8px">로컬 데모 폴더 열기</a>
+
+    <footer>
+      이 페이지는 저장소 루트에 위치한 정적 인덱스입니다. 동적 애플리케이션은 GitHub Pages에서 직접 실행되지 않습니다 — 프로젝트는 서버(예: Heroku, Render, VPS)에 배포해야 합니다.
+    </footer>
+  </div>
+</body>
+</html>
