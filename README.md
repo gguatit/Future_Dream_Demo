@@ -11,19 +11,19 @@ Spring Boot 게시판 프로젝트
 ## 데모 스크린샷
 
 <p align="center">
-  <img src="docs/images/1.png" alt="스크린샷 1" width="900" />
+  <img src="demo/docs/images/1.png" alt="스크린샷 1" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/images/2.png" alt="스크린샷 2" width="900" />
+  <img src="demo/docs/images/2.png" alt="스크린샷 2" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/images/3.png" alt="스크린샷 3" width="900" />
+  <img src="demo/docs/images/3.png" alt="스크린샷 3" width="900" />
 </p>
 
 <p align="center">
-  <img src="docs/images/4.png" alt="스크린샷 4" width="900" />
+  <img src="demo/docs/images/4.png" alt="스크린샷 4" width="900" />
 </p>
 
 ---
