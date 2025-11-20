@@ -1,0 +1,10 @@
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/DemoApplication.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/controller/AuthController.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/controller/HomeController.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/controller/PostController.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/entity/Post.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/entity/User.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/repository/PostRepository.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/repository/UserRepository.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/service/PostService.java
+/workspaces/Future_Dream_Demo/demo/src/main/java/com/example/demo/service/UserService.java
