@@ -3,6 +3,52 @@
 Spring Boot 게시판 프로젝트
 ---
 
+## 배포 / 실행 방법 (빠른 안내)
+
+- **Render에 배포 (권장, 간단)**: 이 리포지토리에 `render.yaml`이 추가되어 있습니다. Render 대시보드에서 `New -> Web Service`를 선택하고 `gguatit/Future_Dream_Demo` 리포를 연결하면 자동으로 또는 수동으로 아래 설정을 사용해 배포할 수 있습니다.
+  - Build Command: `cd demo && mvn -DskipTests package`
+  - Start Command: `java -Dserver.port=$PORT -jar demo/target/demo-0.0.1-SNAPSHOT.jar`
+
+- **Docker로 로컬/호스팅 테스트**: 루트에 `Dockerfile`이 추가되어 있습니다. 로컬 테스트 방법:
+  ```bash
+  docker build -t future-dream-demo .
+  docker run -p 8080:8080 -e PORT=8080 future-dream-demo
+  ```
+
+- **로컬 빌드 & 실행 (Maven)**:
+  ```bash
+  # demo 폴더에서
+  mvn -f demo/pom.xml -DskipTests package
+  java -jar demo/target/demo-0.0.1-SNAPSHOT.jar
+  ```
+  - 참고: 리포지토리에 있는 `mvnw`(wrapper)는 일부 파일이 누락되어 wrapper 실행이 실패할 수 있습니다. 실패 시 시스템 `mvn`을 사용하세요.
+
+- **GitHub Pages 관련**: 리포지터리 루트에 `index.html`이 있어 프로젝트 소개(정적) 페이지를 제공할 수 있습니다. Spring Boot 애플리케이션 자체는 GitHub Pages에서 실행할 수 없습니다(정적 호스팅 전용).
+
+### 자동 배포 (GitHub Actions → Render)
+
+리포지터리에 추가된 `.github/workflows/deploy-to-render.yml` 워크플로는 `main` 브랜치에 푸시될 때 Render의 REST API를 호출해 자동 배포를 트리거합니다. 자동 배포를 사용하려면 아래 설정을 먼저 완료하세요.
+
+1. Render에서 서비스 생성
+  - Render 대시보드에서 `New` → `Web Service`로 리포지터리를 연결하거나 `render.yaml`을 사용해 서비스 생성.
+  - 서비스 생성 후 Render 대시보드의 서비스 설정 페이지에서 `Service ID`를 확인하세요.
+
+2. Render API Key 발급
+  - Render 계정 설정(Settings) → API Keys → New API Key 생성(이 키는 안전하게 보관).
+
+3. GitHub 리포지터리에 시크릿 등록
+  - GitHub 리포지터리 → `Settings` → `Secrets and variables` → `Actions` → `New repository secret`
+  - 등록할 시크릿 이름과 값:
+    - `RENDER_API_KEY`: Render에서 생성한 API Key
+    - `RENDER_SERVICE_ID`: 배포할 Render 서비스의 ID
+
+4. 워크플로 테스트
+  - 위 시크릿을 등록한 뒤, `main` 브랜치로 커밋/푸시하면 워크플로가 실행되고 Render에 배포가 트리거됩니다.
+  - 워크플로 파일: `.github/workflows/deploy-to-render.yml`
+
+참고: 워크플로는 단순히 Render의 deploy API를 호출하여 Render가 리포지터리에서 코드를 pull하고 빌드하도록 요청합니다. 빌드/런타임 설정(build/start commands)은 Render 서비스 설정에서 관리됩니다.
+
+
 ## 핵심 요약
 - 프로젝트: 게시판(Spring Boot + Thymeleaf + Spring Data JPA + H2)
 - 목적: MVC 아키텍처와 레이어 분리를 보여주기 위한 샘플
