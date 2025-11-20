@@ -1,0 +1,383 @@
+package com.example.demo.controller;
+
+import com.example.demo.entity.Post;
+import com.example.demo.service.PostService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 📌 게시글(Post) 관련 컨트롤러
+ * 
+ * 학습 포인트:
+ * 1. @RequestMapping을 활용한 URL 그룹화
+ * 2. RESTful URL 설계 패턴
+ * 3. Service 계층을 통한 비즈니스 로직 분리
+ * 4. @PathVariable을 활용한 동적 URL 매핑
+ * 
+ * URL 구조:
+ * - GET  /posts             → 게시글 목록
+ * - GET  /posts/write       → 글쓰기 폼
+ * - POST /posts/write       → 글쓰기 처리
+ * - GET  /posts/{id}        → 게시글 상세 조회
+ * - GET  /posts/{id}/edit   → 게시글 수정 폼
+ * - POST /posts/{id}/edit   → 게시글 수정 처리
+ * - POST /posts/{id}/delete → 게시글 삭제
+ * 
+ * 💡 왜 Service를 사용할까?
+ * - Controller: HTTP 요청/응답 처리만 담당
+ * - Service: 비즈니스 로직 (권한 확인, 데이터 검증 등)
+ * - Repository: DB 접근
+ * → 각 계층의 역할을 명확히 분리 (관심사의 분리)
+ */
+@Controller
+@RequestMapping("/posts")  // 이 컨트롤러의 모든 URL은 /posts로 시작
+public class PostController {
+
+    /**
+     * Service 계층 주입
+     * 
+     * 학습 포인트:
+     * - @Autowired로 PostService를 자동 주입
+     * - Controller는 Repository를 직접 사용하지 않음
+     * - Service를 통해 비즈니스 로직을 처리
+     */
+    @Autowired
+    private PostService postService;
+
+    // ============================================
+    // 게시글 목록
+    // ============================================
+
+    /**
+     * 게시글 목록 조회
+     * URL: /posts (GET)
+     * 
+     * 학습 포인트:
+     * 1. @GetMapping (파라미터 없음) → /posts에 매핑
+     * 2. 로그인 여부 확인 (선택사항)
+     * 3. Service를 통한 데이터 조회
+     * 4. List<Post>를 뷰에 전달
+     * 
+     * 💡 왜 @GetMapping만 사용?
+     * - @RequestMapping("/posts") + @GetMapping
+     * - 결과: GET /posts
+     */
+    @GetMapping
+    public String list(HttpSession session, Model model) {
+        // 로그인 정보 확인 (게시글 목록은 비로그인도 볼 수 있음)
+        String username = (String) session.getAttribute("loginUser");
+        model.addAttribute("username", username);
+
+        // 게시글 목록 조회 (Service 계층 호출)
+        List<Post> posts = postService.getAllPosts();
+        model.addAttribute("posts", posts);
+
+        System.out.println("게시글 목록 조회: " + posts.size() + "개");
+
+        return "post-list";  // templates/post-list.html
+    }
+
+    // ============================================
+    // 게시글 작성 폼
+    // ============================================
+
+    /**
+     * 게시글 작성 폼 표시
+     * URL: /posts/write (GET)
+     * 
+     * 학습 포인트:
+     * - 로그인 확인 필수 (비로그인 시 리다이렉트)
+     * - GET: 폼만 표시, POST: 실제 저장
+     * - 같은 URL, 다른 HTTP 메서드 → 다른 처리
+     */
+    @GetMapping("/write")
+    public String writeForm(HttpSession session, Model model) {
+        // 로그인 확인
+        String username = (String) session.getAttribute("loginUser");
+        if (username == null) {
+            System.out.println("❌ 비로그인 사용자가 글쓰기 시도");
+            return "redirect:/auth/login";
+        }
+
+        model.addAttribute("username", username);
+        return "post-write";  // templates/post-write.html
+    }
+
+    // ============================================
+    // 게시글 작성 처리
+    // ============================================
+
+    /**
+     * 게시글 작성 처리
+     * URL: /posts/write (POST)
+     * 
+     * 학습 포인트:
+     * 1. @RequestParam: form의 input name과 매핑
+     * 2. 입력값 검증 (제목, 내용 필수)
+     * 3. Service를 통한 게시글 생성
+     * 4. redirect: 작성 후 상세 페이지로 이동
+     * 
+     * 💡 왜 redirect를 사용할까?
+     * - forward: URL은 그대로, 뷰만 변경 (새로고침 시 중복 등록)
+     * - redirect: 새로운 URL로 이동 (새로고침 해도 안전)
+     */
+    @PostMapping("/write")
+    public String write(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            HttpSession session,
+            Model model
+    ) {
+        // 로그인 확인
+        String username = (String) session.getAttribute("loginUser");
+        if (username == null) {
+            return "redirect:/login";
+        }
+
+        // 입력값 검증
+        if (title == null || title.trim().isEmpty()) {
+            model.addAttribute("error", "제목을 입력해주세요.");
+            return "post-write";
+        }
+
+        if (content == null || content.trim().isEmpty()) {
+            model.addAttribute("error", "내용을 입력해주세요.");
+            return "post-write";
+        }
+
+        // 게시글 작성
+        try {
+            Post post = postService.createPost(title, content, username);
+            System.out.println("✅ 게시글 작성 완료: " + post.getId());
+            return "redirect:/posts/" + post.getId();
+        } catch (Exception e) {
+            model.addAttribute("error", "게시글 작성 중 오류가 발생했습니다.");
+            return "post-write";
+        }
+    }
+
+    // ============================================
+    // 게시글 상세 조회
+    // ============================================
+
+    /**
+     * 게시글 상세 조회
+     * URL: /posts/{id} (GET)
+     * 예) /posts/1, /posts/42 등
+     * 
+     * 학습 포인트:
+     * 1. @PathVariable: URL의 {id} 부분을 변수로 받음
+     * 2. 동적 URL 매핑 (RESTful 설계의 핵심)
+     * 3. 예외 처리 (게시글이 없는 경우)
+     * 4. 작성자 확인 로직 (수정/삭제 버튼 표시용)
+     * 
+     * 💡 @PathVariable vs @RequestParam 차이:
+     * - @PathVariable: /posts/1 (URL 경로의 일부)
+     * - @RequestParam: /posts?id=1 (쿼리 파라미터)
+     */
+    @GetMapping("/{id}")
+    public String detail(
+            @PathVariable("id") Long id,  // URL의 {id}를 Long 타입으로 받음
+            HttpSession session,
+            Model model
+    ) {
+        try {
+            // 게시글 조회 (조회수도 자동 증가)
+            Post post = postService.getPostById(id);
+            model.addAttribute("post", post);
+
+            // 로그인 정보
+            String username = (String) session.getAttribute("loginUser");
+            model.addAttribute("username", username);
+
+            // 작성자 확인 (수정/삭제 버튼 표시용)
+            // 현재 로그인한 사용자가 글쓴이인지 확인
+            boolean isAuthor = username != null && post.isAuthor(username);
+            model.addAttribute("isAuthor", isAuthor);
+
+            return "post-detail";  // templates/post-detail.html
+
+        } catch (Exception e) {
+            System.out.println("❌ 게시글 조회 실패: " + e.getMessage());
+            return "redirect:/posts";  // 실패 시 목록으로
+        }
+    }
+
+    // ============================================
+    // 게시글 삭제
+    // ============================================
+
+    /**
+     * 게시글 삭제
+     * URL: /posts/{id}/delete (POST)
+     * 예) /posts/1/delete
+     * 
+     * 학습 포인트:
+     * 1. 삭제는 반드시 POST 사용 (보안)
+     * 2. @PathVariable로 삭제할 게시글 ID 받기
+     * 3. Service에서 권한 확인 (작성자만 삭제 가능)
+     * 4. 삭제 후 목록으로 리다이렉트
+     * 
+     * 💡 왜 GET /posts/{id}/delete는 위험할까?
+     * - 브라우저 캐시, 검색엔진 크롤러 등이 URL 접근 시 삭제됨
+     * - <img src="/posts/1/delete"> 같은 공격 가능
+     * - 반드시 POST, PUT, DELETE 같은 메서드 사용!
+     */
+    @PostMapping("/{id}/delete")
+    public String delete(
+            @PathVariable("id") Long id,
+            HttpSession session
+    ) {
+        // 로그인 확인
+        String username = (String) session.getAttribute("loginUser");
+        if (username == null) {
+            return "redirect:/auth/login";
+        }
+
+        // 삭제 처리 (Service에서 권한 확인)
+        boolean success = postService.deletePost(id, username);
+
+        if (!success) {
+            System.out.println("❌ 게시글 삭제 실패: 권한 없음 또는 존재하지 않는 게시글");
+        }
+
+        return "redirect:/posts";  // 삭제 후 목록으로
+    }
+
+    // ============================================
+    // 게시글 수정 폼
+    // ============================================
+
+    /**
+     * 게시글 수정 폼 표시
+     * URL: /posts/{id}/edit (GET)
+     * 예) /posts/12/edit
+     * 
+     * 학습 포인트:
+     * 1. 수정 폼에는 기존 데이터를 미리 채워야 함
+     * 2. 작성자만 수정 가능 (권한 확인)
+     * 3. Model에 post 객체를 담아서 뷰에 전달
+     * 4. 폼에서 th:value="${post.title}" 형태로 사용
+     * 
+     * 💡 수정 vs 작성의 차이:
+     * - 작성: 빈 폼 제공
+     * - 수정: 기존 데이터가 채워진 폼 제공
+     */
+    @GetMapping("/{id}/edit")
+    public String editForm(
+            @PathVariable("id") Long id,
+            HttpSession session,
+            Model model
+    ) {
+        // 1. 로그인 확인
+        String username = (String) session.getAttribute("loginUser");
+        if (username == null) {
+            System.out.println("❌ 비로그인 사용자가 수정 시도");
+            return "redirect:/auth/login";
+        }
+
+        try {
+            // 2. 게시글 조회
+            Post post = postService.getPostById(id);
+
+            // 3. 작성자 확인 (중요!)
+            if (!post.isAuthor(username)) {
+                System.out.println("❌ 권한 없는 사용자가 수정 시도: " + username);
+                return "redirect:/posts/" + id;  // 상세 페이지로 리다이렉트
+            }
+
+            // 4. 폼에 데이터 전달
+            model.addAttribute("post", post);
+            model.addAttribute("username", username);
+
+            System.out.println("게시글 수정 폼 접근: " + id);
+            return "post-edit";  // templates/post-edit.html
+
+        } catch (Exception e) {
+            System.out.println("❌ 게시글 조회 실패: " + e.getMessage());
+            return "redirect:/posts";
+        }
+    }
+
+    // ============================================
+    // 게시글 수정 처리
+    // ============================================
+
+    /**
+     * 게시글 수정 처리
+     * URL: /posts/{id}/edit (POST)
+     * 
+     * 학습 포인트:
+     * 1. @PathVariable로 수정할 게시글 ID 받기
+     * 2. @RequestParam로 수정된 내용 받기
+     * 3. Service에서 권한 확인 및 수정 처리
+     * 4. 성공 시 상세 페이지로, 실패 시 다시 수정 폼으로
+     * 
+     * 💡 RESTful하게 하려면?
+     * - PUT /posts/{id} 를 사용하는 게 이상적
+     * - 하지만 HTML form은 GET/POST만 지원
+     * - 실무: POST /posts/{id}/edit 또는 HiddenHttpMethodFilter 사용
+     */
+    @PostMapping("/{id}/edit")
+    public String edit(
+            @PathVariable("id") Long id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            HttpSession session,
+            Model model
+    ) {
+        // 1. 로그인 확인
+        String username = (String) session.getAttribute("loginUser");
+        if (username == null) {
+            return "redirect:/auth/login";
+        }
+
+        // 2. 입력값 검증
+        if (title == null || title.trim().isEmpty()) {
+            model.addAttribute("error", "제목을 입력해주세요.");
+            // 수정 실패 시 다시 폼으로 (기존 데이터 유지)
+            try {
+                Post post = postService.getPostById(id);
+                model.addAttribute("post", post);
+                return "post-edit";
+            } catch (Exception e) {
+                return "redirect:/posts";
+            }
+        }
+
+        if (content == null || content.trim().isEmpty()) {
+            model.addAttribute("error", "내용을 입력해주세요.");
+            try {
+                Post post = postService.getPostById(id);
+                model.addAttribute("post", post);
+                return "post-edit";
+            } catch (Exception e) {
+                return "redirect:/posts";
+            }
+        }
+
+        // 3.수정 처리 (Service에서 권한 확인 포함)
+        boolean success = postService.updatePost(id, title, content, username);
+
+        if (!success) {
+            System.out.println("게시글 수정 실패: 권한 없음 또는 존재하지 않는 게시글");
+            model.addAttribute("error", "게시글 수정에 실패했습니다.");
+            try {
+                Post post = postService.getPostById(id);
+                model.addAttribute("post", post);
+                return "post-edit";
+            } catch (Exception e) {
+                return "redirect:/posts";
+            }
+        }
+
+        // 4. 성공 시 상세 페이지로 리다이렉트
+        System.out.println("게시글 수정 완료: " + id);
+        return "redirect:/posts/" + id;
+    }
+}
